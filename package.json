@@ -4,7 +4,8 @@
   "description": "Dashboard IOT for autonomus garden, via ESP32.",
   "main": "server.js",
   "scripts": {
-    "test": "testApp"
+    "test": "testApp",
+    "build": "echo 'No build steps required for plain HTML, CSS, and JavaScript'"
   },
   "repository": {
     "type": "git",
