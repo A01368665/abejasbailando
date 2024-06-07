@@ -7,8 +7,8 @@ router.get('/values', getData);
 router.get('/data/:id', getChartData);
 router.post('/data', postData);
 router.post('/motor', setMotorState);
-router.get('/', (req, res) => {
-    res.sendFile('index.html', { root: __dirname });
+router.get('/main', (req, res) => {
+    res.sendFile('index.html');
   });
 
 module.exports = router;
