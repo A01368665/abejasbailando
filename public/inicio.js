@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartContainer = document.getElementById('humidityChart');
     const chartWrapper = document.getElementById('chartWrapper');
     let chartInstance;
-    const baseUrl = process.env.BASE_URI;
+
     // Function to fetch and update the values for squares and circles
     function fetchAndUpdateValues() {
         
-        fetch(`${baseUrl}/api/values`)
+        fetch(`/api/values`)
             .then(response => response.json())
             .then(data => {
                 const { sensorData, lastReceivedTime } = data;
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to fetch and render the chart data
     function fetchAndRenderChart(id) {
-        fetch(`${baseUrl}/api/data/${id}`)
+        fetch(`/api/data/${id}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
