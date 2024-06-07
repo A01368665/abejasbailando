@@ -1,0 +1,25 @@
+{
+  "name": "dashboardhuerto",
+  "version": "1.0.0",
+  "description": "Dashboard IOT for autonomus garden, via ESP32.",
+  "main": "server.js",
+  "scripts": {
+    "test": "testApp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "no hay"
+  },
+  "keywords": [
+    "iot",
+    "itesm"
+  ],
+  "author": "Bailando con las abejas_Pacheco",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.1"
+  }
+}

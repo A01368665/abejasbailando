@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Garden Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@^3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+   
+
+</head>
+<body>
+    <header>
+        <img src="https://th.bing.com/th/id/OIP.zJUiHa_AAYg6jhUjO0bTwQHaHn?rs=1&pid=ImgDetMain" alt="Logo" id="logo">
+        <h1>Autonomous Garden Dashboard</h1>
+    </header>
+    
+    <main>
+        <div class="values-container">
+            <!-- Squares -->
+            <div class="square" id=1>0</div>
+            <div class="square" id=2>0</div>
+            <div class="square" id=3>0</div>
+            <div class="square" id=4>0</div>
+            <div class="square" id=5>0</div>
+            <div class="square" id=6>0</div>
+            <div class="square" id=7>0</div>
+            <div class="square" id=8>0</div>
+            
+            <!-- Circles -->
+            <div class="circle" id=9>0</div>
+            <div class="circle" id=10>0</div>
+        </div>
+        
+        <div class="controls">
+            <label for="selector">Select Plant</label>
+            <select id="selector">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+            </select>
+            <button id="submitBtn">Submit</button>
+        </div>
+        
+        <p id="lastDataReceived">Last time data was received: <span id="lastReceivedTime">N/A</span></p>
+        
+        <div id="chartWrapper" class="hidden">
+            <canvas id="humidityChart"></canvas>
+        </div>
+    </main>
+
+    <script src="inicio.js" defer></script>
+</body>
+</html>
