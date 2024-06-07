@@ -1,7 +1,6 @@
 // Load environment variables from .env file
 require('dotenv').config(); 
 const admin = require('firebase-admin');
-const firebaseConfig = require('./firebaseconfig.json');
 
 
 
