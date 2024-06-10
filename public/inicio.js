@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const submitMotorState = async (motorId) => {
         try {
-            const response = await fetch(`${baseUrl}/api/motor`, {
+            const response = await fetch(`/api/motor`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
