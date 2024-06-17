@@ -17,19 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 const { sensorData, lastReceivedTime } = data;
-    
+                console.log(JSON.stringify(sensorData[9]))
                 // Function to get the latest humidity value from the sensor data object
                 const getLatestHumidity = (sensor) => {
                     const entries = Object.values(sensor);
                     if (entries.length > 0) {
-                        const latestEntry = entries[entries.length - 1]; // Assuming the last entry is the latest
+                        const latestEntry = entries[entries.length - 1]; 
                         return latestEntry.humidity;
                     }
                     return 'N/A';
                 };
-    
+                
                 // Update squares
-                for (let i = 1; i <= 8; i++) {
+                for (let i = 1; i <= 10; i++) {
                     if (sensorData[i]) {
                         document.getElementById(`${i}`).textContent = getLatestHumidity(sensorData[i]);
                     } else {
@@ -37,14 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
     
-                // Update circles
-                for (let i = 9; i <= 10; i++) {
-                    if (sensorData[i]) {
-                        document.getElementById(`${i - 8}`).textContent = getLatestHumidity(sensorData[i]);
-                    } else {
-                        document.getElementById(`${i - 8}`).textContent = 'N/A';
-                    }
-                }
+                
                 const formattedLastReceivedTime = moment(lastReceivedTime).format('YYYY-MM-DD HH:mm:ss');
                 document.getElementById('lastReceivedTime').textContent = formattedLastReceivedTime;
           
@@ -110,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: 'minute',
-                                    stepSize: 5
+                                    unit: 'hour',
+                                    stepSize: 1
                                 }
                             },
                             y: {
@@ -121,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
     
-                console.log('Displaying chart wrapper...');
+      
                 document.getElementById('chartWrapper').classList.remove('hidden'); // Show the chartWrapper
             })
             .catch(error => {
@@ -157,14 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    circles.forEach(circle => {
+        circle.addEventListener('click', (e) => {
+            const id = e.target.id;
+            console.log(id)
+            fetchAndRenderChart(id);
+        });
+    });
+
+
     submitBtn.addEventListener('click', () => {
         const selectedValue = selector.value;
         console.log('Selected Plant:', selectedValue);
         submitMotorState(selectedValue);
     });
 
-
-    // Periodically fetch and update values
     fetchAndUpdateValues();
     setInterval(fetchAndUpdateValues, 60000); // Update every minute
 });
