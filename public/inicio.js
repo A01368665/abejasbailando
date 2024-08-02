@@ -1,4 +1,3 @@
-// scripts.js
 document.addEventListener('DOMContentLoaded', () => {
     const squares = document.querySelectorAll('.square');
     const circles = document.querySelectorAll('.circle');
@@ -10,15 +9,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartWrapper = document.getElementById('chartWrapper');
     let chartInstance;
 
-    // Function to fetch and update the values for squares and circles
+    // Create the input field, submit button, and close button once
+    const idealValueContainer = document.createElement('div');
+    idealValueContainer.id = 'idealValueContainer';
+    idealValueContainer.style.display = 'none'; // Initially hidden
+
+    const idealValueInput = document.createElement('input');
+    idealValueInput.type = 'number';
+    idealValueInput.placeholder = 'Set Ideal Value';
+    idealValueInput.id = 'idealValueInput';
+
+    const submitIdealValueBtn = document.createElement('button');
+    submitIdealValueBtn.textContent = 'Set Ideal Value';
+    submitIdealValueBtn.id = 'submitIdealValueBtn';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.id = 'closeBtn';
+
+    idealValueContainer.appendChild(idealValueInput);
+    idealValueContainer.appendChild(submitIdealValueBtn);
+    idealValueContainer.appendChild(closeBtn);
+    document.body.appendChild(idealValueContainer); // Append to the body or a specific container
+
     function fetchAndUpdateValues() {
-        
         fetch(`/api/values`)
             .then(response => response.json())
             .then(data => {
                 const { sensorData, lastReceivedTime } = data;
-                console.log(JSON.stringify(sensorData[9]))
-                // Function to get the latest humidity value from the sensor data object
+
                 const getLatestHumidity = (sensor) => {
                     const entries = Object.values(sensor);
                     if (entries.length > 0) {
@@ -27,8 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     return 'N/A';
                 };
-                
-                // Update squares
+
                 for (let i = 1; i <= 10; i++) {
                     if (sensorData[i]) {
                         document.getElementById(`${i}`).textContent = getLatestHumidity(sensorData[i]);
@@ -36,19 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById(`${i}`).textContent = 'N/A';
                     }
                 }
-    
-                
+
                 const formattedLastReceivedTime = moment(lastReceivedTime).format('YYYY-MM-DD HH:mm:ss');
                 document.getElementById('lastReceivedTime').textContent = formattedLastReceivedTime;
-          
             })
             .catch(error => {
                 console.error('Error fetching values:', error);
             });
     }
-    
-    
-    // Function to fetch and render the chart data
+
     function fetchAndRenderChart(id) {
         fetch(`/api/data/${id}`)
             .then(response => {
@@ -59,31 +73,31 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 console.log('Received chart data:', data);
-    
+
                 if (!data || Object.keys(data).length === 0) {
                     console.log('No chart data received.');
                     return;
                 }
-    
+
                 const sensorValues = Object.values(data).map(item => ({
                     humidity: item.humidity,
-                    time: moment(item.time) // Parse date with Moment.js
+                    time: moment(item.time)
                 }));
                 console.log('Sensor values:', sensorValues);
-    
-                const labels = sensorValues.map(item => item.time.format('YYYY-MM-DDTHH:mm:ss')); // Format date with Moment.js
+
+                const labels = sensorValues.map(item => item.time.format('YYYY-MM-DDTHH:mm:ss'));
                 const values = sensorValues.map(item => item.humidity);
-    
+
                 console.log('Labels:', labels);
                 console.log('Values:', values);
-    
+
                 if (chartInstance) {
                     console.log('Destroying existing chart instance...');
                     chartInstance.destroy();
-                  
                 }
+
                 document.getElementById('chartWrapper').classList.remove('hidden');
-    
+
                 const ctx = document.getElementById('humidityChart').getContext('2d');
                 console.log('Rendering new chart...');
                 chartInstance = new Chart(ctx, {
@@ -113,16 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
-    
-      
-                document.getElementById('chartWrapper').classList.remove('hidden'); // Show the chartWrapper
+
+                document.getElementById('chartWrapper').classList.remove('hidden');
             })
             .catch(error => {
                 console.error('Error fetching chart data:', error);
             });
     }
-    
-    
+
     const submitMotorState = async (motorId) => {
         try {
             const response = await fetch(`/api/motor`, {
@@ -133,31 +145,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ "motorId": motorId })
             });
             const data = await response.json();
-            console.log(data.message); // Log the response message
+            console.log(data.message);
         } catch (error) {
             console.error('Error submitting motor state:', error);
         }
     };
+
+    const submitIdealValue = async (sensorId, idealValue) => {
+        try {
+            // Make a POST request to update the ideal value
+            const response = await fetch(`/api/sensor/${sensorId}/ideal`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idealValue: Number(idealValue) })
+
+            });
+    
+            // Check if the response is okay (status code in the range 200-299)
+            if (!response.ok) {
+                // Get the response text for debugging
+                const text = await response.text();
+                console.error(`Error response: ${text}`);
+                throw new Error('Network response was not ok');
+            }
+    
+            // Parse the JSON response
+            const data = await response.json();
+            console.log(`Ideal value for sensor ${sensorId} updated:`, data.message);
+    
+            // Optionally, you might want to update the UI or show a success message
+            alert(`Success: ${data.message}`);
+    
+        } catch (error) {
+            // Handle errors appropriately
+            console.error(`Error updating ideal value for sensor ${sensorId}:`, error);
+            alert(`Failed to update ideal value. Please try again.`);
+        }
+    };
     
 
-    // Event listener for square clicks
-    squares.forEach(square => {
-        square.addEventListener('click', (e) => {
-            const id = e.target.id;
-            console.log(id)
-            fetchAndRenderChart(id);
-        });
+    const handleSensorClick = (id, element) => {
+        console.log(id);
+        fetchAndRenderChart(id);
+
+        // Toggle visibility of the input field and buttons
+        idealValueContainer.style.display = idealValueContainer.style.display === 'none' ? 'block' : 'none';
+        
+        // Set a data attribute to keep track of the current sensor ID
+        idealValueContainer.dataset.sensorId = id;
+    };
+
+    // Event listener for the close button
+    document.getElementById('closeBtn').addEventListener('click', () => {
+        idealValueContainer.style.display = 'none'; // Hide the container
     });
 
+    // Event listener for the submit ideal value button
+    document.getElementById('submitIdealValueBtn').addEventListener('click', () => {
+        const sensorId = idealValueContainer.dataset.sensorId;
+        const idealValue = document.getElementById('idealValueInput').value;
+        if (idealValue) {
+            submitIdealValue(sensorId, idealValue);
+        }
+    });
+
+    // Event listeners for square and circle clicks
+    squares.forEach(square => {
+        square.addEventListener('click', (e) => {
+            handleSensorClick(e.target.id, square);
+        });
+    });
 
     circles.forEach(circle => {
         circle.addEventListener('click', (e) => {
-            const id = e.target.id;
-            console.log(id)
-            fetchAndRenderChart(id);
+            handleSensorClick(e.target.id, circle);
         });
     });
-
 
     submitBtn.addEventListener('click', () => {
         const selectedValue = selector.value;

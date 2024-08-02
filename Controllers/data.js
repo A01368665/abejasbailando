@@ -33,6 +33,21 @@ const getData = async (req, res) => {
     try {
       const timestamp = new Date().toISOString();
   
+      // Step 1: Fetch current ideal values for all sensors
+      const idealValuesSnapshot = await db.ref('sensorData').once('value');
+      const idealValues = {};
+      idealValuesSnapshot.forEach(sensorSnapshot => {
+        const sensorId = sensorSnapshot.key;
+        const sensorData = sensorSnapshot.val();
+        if (sensorData.idealValue !== undefined) {
+          idealValues[sensorId] = sensorData.idealValue;
+        }
+      });
+  
+      // Step 2: Calculate deviations and determine the maximum deviation sensor
+      let maxDeviation = -1;
+      let motorId = 0; // Default to 0 if no significant deviation
+  
       await Promise.all(Object.entries(sensors).map(async ([sensorId, value]) => {
         const { humidity, idealValue } = value;
   
@@ -43,20 +58,36 @@ const getData = async (req, res) => {
         if (idealValue !== undefined) {
           await db.ref(`sensorData/${sensorId}/idealValue`).set(idealValue);
         }
+  
+        // Calculate deviation
+        const currentIdealValue = idealValues[sensorId] !== undefined ? idealValues[sensorId] : idealValue;
+        const deviation = Math.abs(humidity - currentIdealValue);
+  
+        // Determine the sensor with the maximum deviation
+        if (deviation > maxDeviation) {
+          maxDeviation = deviation;
+          motorId = parseInt(sensorId, 10); // Convert sensorId to number
+        } else if (deviation === maxDeviation && motorId > parseInt(sensorId, 10)) {
+          // If the deviation is the same, choose the sensor with the smaller numeric ID
+          motorId = parseInt(sensorId, 10);
+        }
       }));
   
-      // Update last received time
+      // Step 3: Update last received time
       await db.ref('lastReceivedTime').set(timestamp);
   
+      // Step 4: Fetch current motor state
       const motorSnapshot = await db.ref('motor').once('value');
       const motorState = motorSnapshot.val();
   
-      res.status(200).json({ message: "Data uploaded successfully", motor: motorState });
+      // Send response
+      res.status(200).json({ message: "Data uploaded successfully", motor: motorState, activatedMotor: motorId });
     } catch (error) {
       console.error("Error posting data:", error);
       res.status(500).json({ message: "Error posting data", error });
     }
   };
+  
   
 
   const setMotorState = async (req, res) => {
@@ -111,26 +142,49 @@ const downloadData = async (req, res) => {
   }
 };
 
-
 const updateIdealValue = async (req, res) => {
   const { id } = req.params;
   const { idealValue } = req.body;
 
   try {
+    // Log incoming request data
+    console.log(`Request received to update ideal value for sensor ${id}. Ideal value:`, idealValue);
+
     // Validate the input
-    if (idealValue === undefined || typeof idealValue !== 'number') {
+    if (idealValue === undefined || isNaN(idealValue)) {
+      console.error("Invalid idealValue provided:", idealValue);
       return res.status(400).json({ message: "Invalid idealValue provided" });
     }
 
-    // Update the ideal value in the database
-    await db.ref(`sensorData/${id}/idealValue`).set(idealValue);
+    // Convert idealValue to a number
+    const numericIdealValue = Number(idealValue);
+    
+    // Check if sensor data exists
+    const sensorSnapshot = await db.ref(`sensorData/${id}`).once('value');
+   
+    
+    if (!sensorSnapshot.exists()) {
+    
+      await db.ref(`sensorData/${id}`).set({
+        idealValue: numericIdealValue,
 
-    res.status(200).json({ message: `Ideal value for sensor ${id} updated to ${idealValue}` });
+      });
+      console.log(`Sensor ${id} created with ideal value ${numericIdealValue}`);
+      return res.status(201).json({ message: `Sensor ${id} created and ideal value set to ${numericIdealValue}` });
+    }
+ç
+    await db.ref(`sensorData/${id}`).update({ idealValue: numericIdealValue });
+    console.log(`Ideal value for sensor ${id} updated to ${numericIdealValue}`);
+
+    res.status(200).json({ message: `Ideal value for sensor ${id} updated to ${numericIdealValue}` });
   } catch (error) {
     console.error("Error updating ideal value:", error);
-    res.status(500).json({ message: "Error updating ideal value", error });
+    res.status(500).json({ message: "Error updating ideal value", error: error.message });
   }
 };
+
+
+
 
 
   
